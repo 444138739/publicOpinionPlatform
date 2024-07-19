@@ -55,27 +55,17 @@
 <script>
 import { getList } from '@/api/table'
 import request from '@/utils/request'
+
 export default {
-  filters: {
-    statusFilter(status) {
-      const statusMap = {
-        published: 'success',
-        draft: 'gray',
-        deleted: 'danger'
-      }
-      return statusMap[status]
-    }
-  },
   data() {
     return {
-      list: null,
+      list: [], // 确保list初始化为空数组
       listLoading: true,
       searchQuery: ''
     }
   },
   created() {
     this.fetchData()
-    this.handleSearch()
   },
   computed: {
     filteredItems() {
@@ -91,7 +81,11 @@ export default {
     fetchData() {
       this.listLoading = true
       getList().then(response => {
+        console.log('Data loaded:', response.data.items)
         this.list = response.data.items
+        this.listLoading = false
+      }).catch(error => {
+        console.error('Error loading data:', error)
         this.listLoading = false
       })
     },
@@ -102,11 +96,22 @@ export default {
     load() {
       request.get('/admin').then(res => {
         if (res.code === '0') {
+          console.log('Data loaded from /admin:', res.data)
           this.tableData = res.data;
         } else {
-
+          console.error('Error loading data from /admin:', res)
         }
+      }).catch(error => {
+        console.error('Error loading data from /admin:', error)
       })
+    },
+    statusFilter(status) {
+      const statusMap = {
+        published: 'success',
+        draft: 'gray',
+        deleted: 'danger'
+      }
+      return statusMap[status]
     }
   }
 }
