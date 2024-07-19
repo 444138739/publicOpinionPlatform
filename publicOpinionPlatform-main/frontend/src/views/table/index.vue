@@ -1,14 +1,14 @@
 <template>
   <div class="app-container">
-    <el-input
-      placeholder="Search by title"
-      v-model="searchQuery"
-      clearable
-      @input="handleSearch"
-      style="width: 300px; margin-bottom: 20px;"
-    />
-    <el-button :icon="Search" circle style="margin-left:10px"/>
-    <el-button type="primary" style="margin-left : 10px">Clear</el-button>
+    <div class="search-container">
+      <el-input
+        placeholder="Search by title"
+        v-model="searchQuery"
+        clearable
+        @input="handleSearch"
+      />
+      <el-button type="primary" @click="handleSearch" class="search-button">Search</el-button>
+    </div>
     <el-table
       v-loading="listLoading"
       :data="filteredItems"
@@ -54,7 +54,7 @@
 
 <script>
 import { getList } from '@/api/table'
-
+import request from '@/utils/request'
 export default {
   filters: {
     statusFilter(status) {
@@ -75,6 +75,7 @@ export default {
   },
   created() {
     this.fetchData()
+    this.handleSearch()
   },
   computed: {
     filteredItems() {
@@ -95,9 +96,41 @@ export default {
       })
     },
     handleSearch() {
+      this.searchQuery = this.searchQuery.trim()
       // The search logic is handled by the computed property 'filteredItems'
+    },
+    load() {
+      request.get('/admin').then(res => {
+        if (res.code === '0') {
+          this.tableData = res.data;
+        } else {
+
+        }
+      })
     }
   }
 }
 </script>
+
+<style scoped>
+.app-container{
+  padding:20px;
+}
+
+.search-container{
+  display:flex;
+  justify-content:flex-end;
+  align-items:stretch;
+  margin-bottom:20px;
+}
+
+.search-input{
+  width: 300px;
+}
+
+.search-button{
+  margin-left: 10px;
+}
+
+</style>
 
