@@ -2,7 +2,22 @@
   <div class="app-container">
     <div class="search-container">
       <el-input
+        class="ID"
+        placeholder="Search by ID"
+        v-model="searchQuery"
+        clearable
+        @input="handleSearch"
+      />
+      <el-input
+        class="Title"
         placeholder="Search by title"
+        v-model="searchQuery"
+        clearable
+        @input="handleSearch"
+      />
+      <el-input
+        class="Author"
+        placeholder="Search by Author"
         v-model="searchQuery"
         clearable
         @input="handleSearch"
@@ -75,8 +90,36 @@ export default {
       return this.list.filter(item =>
         item.title.toLowerCase().includes(this.searchQuery.toLowerCase())
       )
+    },
+    filteredItemsID() {
+      if (!this.searchQuery) {
+        return this.list
+      }
+      return this.list.filter(item =>
+        item.ID.includes(this.searchQuery)
+      )
+    },
+
+    filteredItemsAuthor() {
+      if (!this.searchQuery) {
+        return this.list
+      }
+      return this.list.filter(item =>
+        item.author.toLowerCase().includes(this.searchQuery.toLowerCase())
+      )
     }
   },
+
+  /* filteredItems() {
+      if (!this.searchQuery) {
+        return this.list
+      }
+      return this.list.filter(item =>
+        item.title.toLowerCase().includes(this.searchQuery.toLowerCase())
+      )
+    }
+  },*/
+
   methods: {
     fetchData() {
       this.listLoading = true
@@ -90,14 +133,14 @@ export default {
       })
     },
     handleSearch() {
-      this.searchQuery = this.searchQuery.trim()
+      console.log('Search query:', this.searchQuery)
       // The search logic is handled by the computed property 'filteredItems'
     },
     load() {
       request.get('/admin').then(res => {
         if (res.code === '0') {
           console.log('Data loaded from /admin:', res.data)
-          this.tableData = res.data;
+          this.tableData = res.data
         } else {
           console.error('Error loading data from /admin:', res)
         }
@@ -124,13 +167,10 @@ export default {
 
 .search-container{
   display:flex;
-  justify-content:flex-end;
-  align-items:stretch;
+  justify-content:flex-start;
+  align-items:center;
   margin-bottom:20px;
-}
-
-.search-input{
-  width: 300px;
+  gap:10px;
 }
 
 .search-button{
