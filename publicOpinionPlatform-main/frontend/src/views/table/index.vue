@@ -16,7 +16,7 @@
         @input="handleSearch('Title')"
       />
       <el-input
-        class="Author"
+        class="Author+"
         placeholder="Search by Author"
         v-model="searchQueryAuthor"
         clearable
@@ -32,32 +32,32 @@
       fit
       highlight-current-row
     >
-      <el-table-column align="center" label="ID" width="95">
+      <el-table-column align="center" label="用户名" width="95">
         <template slot-scope="scope">
-          {{ scope.row.ID }}
+          {{ scope.row.id }}
         </template>
       </el-table-column>
-      <el-table-column label="Title">
+      <el-table-column label="用户ID">
         <template slot-scope="scope">
           {{ scope.row.title }}
         </template>
       </el-table-column>
-      <el-table-column label="Author" width="110" align="center">
+      <el-table-column label="关注数" width="110" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.author }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Pageviews" width="110" align="center">
+      <el-table-column label="被关注数" width="110" align="center">
         <template slot-scope="scope">
           {{ scope.row.pageviews }}
         </template>
       </el-table-column>
-      <el-table-column class-name="status-col" label="Status" width="110" align="center">
+      <el-table-column class-name="status-col" label="贴文数" width="110" align="center">
         <template slot-scope="scope">
           <el-tag :type="statusFilter(scope.row.status)">{{ scope.row.status }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column align="center" prop="created_at" label="Display_time" width="200">
+      <el-table-column align="center" prop="created_at" label="地点" width="200">
         <template slot-scope="scope">
           <i class="el-icon-time" />
           <span>{{ scope.row.display_time }}</span>
@@ -70,6 +70,8 @@
 <script>
 import { getList } from '@/api/table'
 import request from '@/utils/request'
+import axios from 'axios'
+
 
 export default {
   data() {
@@ -89,24 +91,23 @@ export default {
     filteredItems() {
       let filteredList = this.list
 
-      if (this.currentSearchType === 'ID' && this.searchQueryID) {
+      if (this.searchQueryID) {
         filteredList = filteredList.filter(item =>
-          item.ID && item.ID.toString().includes(this.searchQueryID)
+          item.id && item.id.toString().includes(this.searchQueryID)
         )
       }
 
-      if (this.currentSearchType === 'Title' && this.searchQueryTitle) {
+      if (this.searchQueryTitle) {
         filteredList = filteredList.filter(item =>
           item.title && item.title.toLowerCase().includes(this.searchQueryTitle.toLowerCase())
         )
       }
 
-      if (this.currentSearchType === 'Author' && this.searchQueryAuthor) {
+      if (this.searchQueryAuthor) {
         filteredList = filteredList.filter(item =>
           item.author && item.author.toLowerCase().includes(this.searchQueryAuthor.toLowerCase())
         )
       }
-
       return filteredList
     }
   },
@@ -127,7 +128,7 @@ export default {
       this.currentSearchType = type
     },
     load() {
-      request.get('/admin').then(res => {
+      request.get('/user/getBaseUserInfo').then(res => {
         if (res.code === '0') {
           console.log('Data loaded from /admin:', res.data)
           this.tableData = res.data
