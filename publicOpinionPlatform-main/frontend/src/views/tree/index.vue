@@ -1,78 +1,169 @@
 <template>
   <div class="app-container">
-    <el-input v-model="filterText" placeholder="Filter keyword" style="margin-bottom:30px;" />
-
-    <el-tree
-      ref="tree2"
-      :data="data2"
-      :props="defaultProps"
-      :filter-node-method="filterNode"
-      class="filter-tree"
-      default-expand-all
-    />
-
+    <div class="search-container">
+      <el-input
+        class="ID"
+        placeholder="Search by ID"
+        v-model="searchQueryID"
+        clearable
+        @input="handleSearch('ID')"
+      />
+      <el-input
+        class="Title"
+        placeholder="Search by title"
+        v-model="searchQueryTitle"
+        clearable
+        @input="handleSearch('Title')"
+      />
+      <el-input
+        class="Author"
+        placeholder="Search by Author"
+        v-model="searchQueryAuthor"
+        clearable
+        @input="handleSearch('Author')"
+      />
+      <el-button type="primary" @click="handleSearch" class="search-button">Search</el-button>
+    </div>
+    <el-table
+      v-loading="listLoading"
+      :data="filteredItems"
+      element-loading-text="Loading"
+      border
+      fit
+      highlight-current-row
+    >
+      <el-table-column align="center" label="ID" width="95">
+        <template slot-scope="scope">
+          {{ scope.row.id }}
+        </template>
+      </el-table-column>
+      <el-table-column label="Title">
+        <template slot-scope="scope">
+          {{ scope.row.title }}
+        </template>
+      </el-table-column>
+      <el-table-column label="Author" width="110" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.author }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="Pageviews" width="110" align="center">
+        <template slot-scope="scope">
+          {{ scope.row.pageviews }}
+        </template>
+      </el-table-column>
+      <el-table-column class-name="status-col" label="Status" width="110" align="center">
+        <template slot-scope="scope">
+          <el-tag :type="statusFilter(scope.row.status)">{{ scope.row.status }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" prop="created_at" label="Display_time" width="200">
+        <template slot-scope="scope">
+          <i class="el-icon-time" />
+          <span>{{ scope.row.display_time }}</span>
+        </template>
+      </el-table-column>
+    </el-table>
   </div>
 </template>
 
 <script>
-export default {
+import { getList } from '@/api/table'
+import request from '@/utils/request'
 
+export default {
   data() {
     return {
-      filterText: '',
-      data2: [{
-        id: 1,
-        label: 'Level one 1',
-        children: [{
-          id: 4,
-          label: 'Level two 1-1',
-          children: [{
-            id: 9,
-            label: 'Level three 1-1-1'
-          }, {
-            id: 10,
-            label: 'Level three 1-1-2'
-          }]
-        }]
-      }, {
-        id: 2,
-        label: 'Level one 2',
-        children: [{
-          id: 5,
-          label: 'Level two 2-1'
-        }, {
-          id: 6,
-          label: 'Level two 2-2'
-        }]
-      }, {
-        id: 3,
-        label: 'Level one 3',
-        children: [{
-          id: 7,
-          label: 'Level two 3-1'
-        }, {
-          id: 8,
-          label: 'Level two 3-2'
-        }]
-      }],
-      defaultProps: {
-        children: 'children',
-        label: 'label'
-      }
+      list: [], // 确保list初始化为空数组
+      listLoading: true,
+      searchQueryID: '',
+      searchQueryTitle: '',
+      searchQueryAuthor: '',
+      currentSearchType: ''
     }
   },
-  watch: {
-    filterText(val) {
-      this.$refs.tree2.filter(val)
-    }
+  created() {
+    this.fetchData()
   },
+  computed: {
+    filteredItems() {
+      let filteredList = this.list
 
+      if (this.searchQueryID) {
+        filteredList = filteredList.filter(item =>
+          item.id && item.id.toString().includes(this.searchQueryID)
+        )
+      }
+
+      if (this.searchQueryTitle) {
+        filteredList = filteredList.filter(item =>
+          item.title && item.title.toLowerCase().includes(this.searchQueryTitle.toLowerCase())
+        )
+      }
+
+      if (this.searchQueryAuthor) {
+        filteredList = filteredList.filter(item =>
+          item.author && item.author.toLowerCase().includes(this.searchQueryAuthor.toLowerCase())
+        )
+      }
+
+      return filteredList
+    }
+  },
   methods: {
-    filterNode(value, data) {
-      if (!value) return true
-      return data.label.indexOf(value) !== -1
+    fetchData() {
+      this.listLoading = true
+      getList().then(response => {
+        console.log('Data loaded:', response.data.items)
+        this.list = response.data.items
+        this.listLoading = false
+      }).catch(error => {
+        console.error('Error loading data:', error)
+        this.listLoading = false
+      })
+    },
+    handleSearch(type) {
+      console.log('Search type:', type)
+      this.currentSearchType = type
+    },
+    load() {
+      request.get('/admin').then(res => {
+        if (res.code === '0') {
+          console.log('Data loaded from /admin:', res.data)
+          this.tableData = res.data
+        } else {
+          console.error('Error loading data from /admin:', res)
+        }
+      }).catch(error => {
+        console.error('Error loading data from /admin:', error)
+      })
+    },
+    statusFilter(status) {
+      const statusMap = {
+        published: 'success',
+        draft: 'gray',
+        deleted: 'danger'
+      }
+      return statusMap[status]
     }
   }
 }
 </script>
 
+<style scoped>
+.app-container {
+  padding: 20px;
+}
+
+.search-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.search-button {
+  margin-left: 10px;
+}
+</style>
