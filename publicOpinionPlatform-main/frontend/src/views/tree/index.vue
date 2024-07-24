@@ -8,20 +8,6 @@
         clearable
         @input="handleSearch('ID')"
       />
-      <el-input
-        class="Title"
-        placeholder="Search by title"
-        v-model="searchQueryTitle"
-        clearable
-        @input="handleSearch('Title')"
-      />
-      <el-input
-        class="Author"
-        placeholder="Search by Author"
-        v-model="searchQueryAuthor"
-        clearable
-        @input="handleSearch('Author')"
-      />
       <el-button type="primary" @click="handleSearch" class="search-button">Search</el-button>
     </div>
     <el-table
@@ -32,35 +18,24 @@
       fit
       highlight-current-row
     >
-      <el-table-column align="center" label="ID" width="95">
+      <el-table-column align="center" label="用户名">
         <template slot-scope="scope">
-          {{ scope.row.id }}
+          {{ scope.row.username }}
         </template>
       </el-table-column>
-      <el-table-column label="Title">
+      <el-table-column label="用户ID" width="110" align="center">
         <template slot-scope="scope">
-          {{ scope.row.title }}
+          <span>{{ scope.row.user_id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Author" width="110" align="center">
+      <el-table-column label="post_id" width="110" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.author }}</span>
+          {{ scope.row.post_id }}
         </template>
       </el-table-column>
-      <el-table-column label="Pageviews" width="110" align="center">
+      <el-table-column label="文本内容">
         <template slot-scope="scope">
-          {{ scope.row.pageviews }}
-        </template>
-      </el-table-column>
-      <el-table-column class-name="status-col" label="Status" width="110" align="center">
-        <template slot-scope="scope">
-          <el-tag :type="statusFilter(scope.row.status)">{{ scope.row.status }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column align="center" prop="created_at" label="Display_time" width="200">
-        <template slot-scope="scope">
-          <i class="el-icon-time" />
-          <span>{{ scope.row.display_time }}</span>
+          {{ scope.row.Hit_sentence }}
         </template>
       </el-table-column>
     </el-table>
@@ -68,18 +43,32 @@
 </template>
 
 <script>
-import { getList } from '@/api/table'
-import request from '@/utils/request'
+
+import axios from 'axios'
 
 export default {
   data() {
     return {
       list: [], // 确保list初始化为空数组
       listLoading: true,
-      searchQueryID: '',
-      searchQueryTitle: '',
-      searchQueryAuthor: '',
-      currentSearchType: ''
+      // searchQueryID: '',
+      // searchQueryTitle: '',
+      // searchQueryAuthor: '',
+      currentSearchType: '',
+      defaultData: [ // 假数据
+        {
+          username: 'John Doe',
+          user_id: '12345',
+          post_id: '1',
+          Hit_sentence: '文本内容'
+        },
+        {
+          username: 'John Doe',
+          user_id: '23456',
+          post_id: '2',
+          Hit_sentence: '文本内容'
+        }
+      ]
     }
   },
   created() {
@@ -91,60 +80,66 @@ export default {
 
       if (this.searchQueryID) {
         filteredList = filteredList.filter(item =>
-          item.id && item.id.toString().includes(this.searchQueryID)
+          item.userid && item.userid.toString().includes(this.searchQueryID)
         )
       }
 
       if (this.searchQueryTitle) {
         filteredList = filteredList.filter(item =>
-          item.title && item.title.toLowerCase().includes(this.searchQueryTitle.toLowerCase())
+          item.username && item.username.toLowerCase().includes(this.searchQueryTitle.toLowerCase())
         )
       }
 
       if (this.searchQueryAuthor) {
         filteredList = filteredList.filter(item =>
-          item.author && item.author.toLowerCase().includes(this.searchQueryAuthor.toLowerCase())
+          item.location && item.location.toLowerCase().includes(this.searchQueryAuthor.toLowerCase())
         )
       }
-
       return filteredList
     }
   },
   methods: {
-    fetchData() {
+    async fetchData() {
       this.listLoading = true
-      getList().then(response => {
-        console.log('Data loaded:', response.data.items)
-        this.list = response.data.items
-        this.listLoading = false
-      }).catch(error => {
+      try {
+        const response = await axios.get('/api/post/getPostInfo', {
+          headers: {
+            'Authorization': 'Bearer YOUR_ACCESS_TOKEN' // 如果需要身份验证
+          }
+        })
+        console.log('API Response:', response.data) // 调试输出响应
+        if (response.data.code === 200) {
+          this.list = response.data.data // 使用实际数据
+        } else {
+          console.warn('API Error:', response.data.message)
+          this.list = this.defaultData // 使用假数据
+        }
+      } catch (error) {
         console.error('Error loading data:', error)
+        this.list = this.defaultData // 使用假数据
+      } finally {
         this.listLoading = false
-      })
+      }
     },
     handleSearch(type) {
       console.log('Search type:', type)
       this.currentSearchType = type
     },
-    load() {
-      request.get('/admin').then(res => {
-        if (res.code === '0') {
-          console.log('Data loaded from /admin:', res.data)
-          this.tableData = res.data
-        } else {
-          console.error('Error loading data from /admin:', res)
-        }
-      }).catch(error => {
-        console.error('Error loading data from /admin:', error)
-      })
-    },
-    statusFilter(status) {
-      const statusMap = {
-        published: 'success',
-        draft: 'gray',
-        deleted: 'danger'
+    async load() {
+      try {
+        const response = await axios.get('/user/getBaseUserInfo', {
+          params: {
+            username: 'John Doe' // 模拟的查询参数
+          },
+          headers: {
+            'Authorization': 'Bearer YOUR_ACCESS_TOKEN' // 如果需要身份验证
+          }
+        })
+        console.log('Data loaded from /user/getBaseUserInfo:', response.data)
+        this.tableData = response.data
+      } catch (error) {
+        console.error('Error loading data from /user/getBaseUserInfo:', error)
       }
-      return statusMap[status]
     }
   }
 }

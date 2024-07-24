@@ -2,27 +2,12 @@
   <div class="app-container">
     <div class="search-container">
       <el-input
-        class="ID"
-        placeholder="Search by ID"
-        v-model="searchQueryID"
+        class="search-username"
+        placeholder="Search by Username"
+        v-moadddel="searchQueryUsername"
         clearable
-        @input="handleSearch('ID')"
       />
-      <el-input
-        class="Title"
-        placeholder="Search by title"
-        v-model="searchQueryTitle"
-        clearable
-        @input="handleSearch('Title')"
-      />
-      <el-input
-        class="Author+"
-        placeholder="Search by Author"
-        v-model="searchQueryAuthor"
-        clearable
-        @input="handleSearch('Author')"
-      />
-      <el-button type="primary" @click="handleSearch" class="search-button">Search</el-button>
+      <el-button type="primary" @click="handleSearch('username')" class="search-button">Search</el-button>
     </div>
     <el-table
       v-loading="listLoading"
@@ -54,13 +39,13 @@
       </el-table-column>
       <el-table-column class-name="status-col" label="贴文数" width="110" align="center">
         <template slot-scope="scope">
-          <el-tag :type="statusFilter(scope.row.post_count)">{{ scope.row.post_count }}</el-tag>
+          {{ scope.row.post_count }}
         </template>
       </el-table-column>
       <el-table-column align="center" prop="created_at" label="地点" width="200">
         <template slot-scope="scope">
           <i class="el-icon-time" />
-          <span>{{ scope.row.location}}</span>
+          <span>{{ scope.row.location }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -68,19 +53,16 @@
 </template>
 
 <script>
-
 import axios from 'axios'
 
 export default {
   data() {
     return {
-      list: [], // 确保list初始化为空数组
+      list: [],
       listLoading: true,
-      searchQueryID: '',
-      searchQueryTitle: '',
-      searchQueryAuthor: '',
+      searchQueryUsername: '',
       currentSearchType: '',
-      defaultData: [ // 假数据
+      defaultData: [
         {
           username: 'John Doe',
           userid: '12345',
@@ -105,79 +87,71 @@ export default {
   },
   computed: {
     filteredItems() {
-      let filteredList = this.list
-
-      if (this.searchQueryID) {
-        filteredList = filteredList.filter(item =>
-          item.userid && item.userid.toString().includes(this.searchQueryID)
-        )
-      }
-
-      if (this.searchQueryTitle) {
-        filteredList = filteredList.filter(item =>
-          item.username && item.username.toLowerCase().includes(this.searchQueryTitle.toLowerCase())
-        )
-      }
-
-      if (this.searchQueryAuthor) {
-        filteredList = filteredList.filter(item =>
-          item.location && item.location.toLowerCase().includes(this.searchQueryAuthor.toLowerCase())
-        )
-      }
-      return filteredList
+      return this.list
     }
   },
   methods: {
     async fetchData() {
       this.listLoading = true
       try {
-        const response = await axios.get('/api/user/getBaseUserInfo', {
+        const response = await axios.get('/user/getBaseUserInfo', {
           headers: {
-            'Authorization': 'Bearer YOUR_ACCESS_TOKEN' // 如果需要身份验证
+            'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
           }
         })
-        console.log('API Response:', response.data) // 调试输出响应
+        console.log('API Response:', response.data)
         if (response.data.code === 200) {
-          this.list = response.data.data // 使用实际数据
+          this.list = response.data.data
         } else {
           console.warn('API Error:', response.data.message)
-          this.list = this.defaultData // 使用假数据
+          this.list = this.defaultData
         }
       } catch (error) {
         console.error('Error loading data:', error)
-        this.list = this.defaultData // 使用假数据
+        this.list = this.defaultData
       } finally {
         this.listLoading = false
       }
     },
-    handleSearch(type) {
+
+    async handleSearch(type) {
       console.log('Search type:', type)
       this.currentSearchType = type
-    },
-    async load() {
-      try {
-        const response = await axios.get('/user/getBaseUserInfo', {
-          params: {
-            username: 'John Doe' // 模拟的查询参数
-          },
-          headers: {
-            'Authorization': 'Bearer YOUR_ACCESS_TOKEN' // 如果需要身份验证
-          }
-        })
-        console.log('Data loaded from /user/getBaseUserInfo:', response.data)
-        this.tableData = response.data
-      } catch (error) {
-        console.error('Error loading data from /user/getBaseUserInfo:', error)
-      }
-    },
 
-    statusFilter(status) {
-      const statusMap = {
-        published: 'success',
-        draft: 'gray',
-        deleted: 'danger'
+      if (type === 'username' && this.searchQueryUsername) {
+        this.listLoading = true
+
+        try {
+          // 使用实际的 POST 请求向后端发送 JSON 数据
+          const response = await axios.post('/api/user/searchByUsername', {
+            username: this.searchQueryUsername
+          }, {
+            headers: {
+              'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
+              'Content-Type': 'application/json'// 确保请求头为 JSON
+            }
+          })
+
+          console.log('Search API Response:', response.data)
+
+          if (response.data.code === 200) {
+            this.list = response.data.data
+          } else {
+            console.warn('Search API Error:', response.data.message)
+            this.list = this.defaultData.filter(item =>
+              item.username.toLowerCase().includes(this.searchQueryUsername.toLowerCase())
+            )
+          }
+        } catch (error) {
+          console.error('Error searching data:', error)
+          // 使用模拟数据进行回退
+          this.list = this.defaultData.filter(item =>
+            item.username.toLowerCase().includes(this.searchQueryUsername.toLowerCase())
+          )
+        } finally {
+          this.listLoading = false
+        }
       }
-      return statusMap[status]
     }
   }
 }
