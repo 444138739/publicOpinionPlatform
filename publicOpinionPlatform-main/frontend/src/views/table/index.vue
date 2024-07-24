@@ -4,8 +4,9 @@
       <el-input
         class="search-username"
         placeholder="Search by Username"
-        v-moadddel="searchQueryUsername"
+        v-model="searchQueryUsername"
         clearable
+        @clear="clearSearch"
       />
       <el-button type="primary" @click="handleSearch('username')" class="search-button">Search</el-button>
     </div>
@@ -19,7 +20,7 @@
     >
       <el-table-column align="center" label="用户名" width="95">
         <template slot-scope="scope">
-          {{ scope.row.username }}
+          <span v-html="scope.row.username"></span>
         </template>
       </el-table-column>
       <el-table-column label="用户ID">
@@ -113,7 +114,11 @@ export default {
         this.listLoading = false
       }
     },
-
+    clearSearch() {
+      this.searchQueryUsername = ''
+      this.highlightedUsername = ''
+      this.list = this.defaultData // 重置为默认数据
+    },
     async handleSearch(type) {
       console.log('Search type:', type)
       this.currentSearchType = type
