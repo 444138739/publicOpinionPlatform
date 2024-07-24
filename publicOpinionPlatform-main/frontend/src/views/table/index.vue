@@ -80,7 +80,9 @@ export default {
           post_count: 8,
           location: 'Los Angeles'
         }
-      ]
+      ],
+      cachedData: null,
+      highlightedUsername: ''
     }
   },
   created() {
@@ -96,6 +98,12 @@ export default {
   },
   methods: {
     async fetchData() {
+      if (this.cachedData) {
+        // 如果缓存中有数据，使用缓存的数据
+        this.list = this.cachedData
+        return // 直接返回，不再发送请求
+      }
+
       this.listLoading = true
       try {
         const response = await axios.get('/user/getAllBaseUserInfo', {
@@ -106,29 +114,35 @@ export default {
         console.log('API Response:', response.data)
         if (response.data.code === 200) {
           this.list = response.data.data
+          this.cachedData = response.data.data // 缓存数据
         } else {
           console.warn('API Error:', response.data.message)
           this.list = this.defaultData
+          this.cachedData = this.defaultData // 缓存默认数据
         }
       } catch (error) {
         console.error('Error loading data:', error)
         this.list = this.defaultData
+        this.cachedData = this.defaultData // 缓存默认数据
       } finally {
         this.listLoading = false
       }
     },
+
     clearSearch() {
       this.searchQueryUsername = ''
       this.highlightedUsername = ''
-      this.list = this.defaultData // 重置为默认数据
+      this.list = this.cachedData // 重置为缓存数据
     },
+
     async handleSearch(type) {
       console.log('Search type:', type)
       this.currentSearchType = type
 
       if (type === 'username' && this.searchQueryUsername) {
         this.listLoading = true
-        this.highlightedUsername = this.searchQueryUsername
+        this.highlightedUsername = this.searchQueryUsername // 设置加粗关键词
+
         try {
           // 使用实际的 POST 请求向后端发送 JSON 数据
           const response = await axios.post('/user/getBaseUserInfo', {
@@ -136,7 +150,7 @@ export default {
           }, {
             headers: {
               'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-              'Content-Type': 'application/json'// 确保请求头为 JSON
+              'Content-Type': 'application/json' // 确保请求头为 JSON
             }
           })
 
@@ -161,6 +175,7 @@ export default {
         }
       }
     },
+
     highlightText(text, query) {
       if (!query) return text
       const regex = new RegExp(`(${query})`, 'gi')
@@ -168,6 +183,7 @@ export default {
     }
   }
 }
+
 </script>
 
 <style scoped>
