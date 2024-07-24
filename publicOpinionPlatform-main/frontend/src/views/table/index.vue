@@ -123,7 +123,7 @@ export default {
 
         try {
           // 使用实际的 POST 请求向后端发送 JSON 数据
-          const response = await axios.post('/api/user/searchByUsername', {
+          const response = await axios.post('user/searchByUsername', {
             username: this.searchQueryUsername
           }, {
             headers: {
