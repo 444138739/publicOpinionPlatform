@@ -61,7 +61,7 @@ export default {
           Hit_sentence: '文本内容'
         },
         {
-          username: 'John Doe',
+          username: 'Jane Smith',
           user_id: '23456',
           post_id: '2',
           Hit_sentence: '文本内容'
