@@ -88,14 +88,17 @@ export default {
   },
   computed: {
     filteredItems() {
-      return this.list
+      return this.list.map(item => ({
+        ...item,
+        username: this.highlightText(item.username, this.highlightedUsername)
+      }))
     }
   },
   methods: {
     async fetchData() {
       this.listLoading = true
       try {
-        const response = await axios.get('/user/getBaseUserInfo', {
+        const response = await axios.get('/user/getAllBaseUserInfo', {
           headers: {
             'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
           }
@@ -125,10 +128,10 @@ export default {
 
       if (type === 'username' && this.searchQueryUsername) {
         this.listLoading = true
-
+        this.highlightedUsername = this.searchQueryUsername
         try {
           // 使用实际的 POST 请求向后端发送 JSON 数据
-          const response = await axios.post('user/searchByUsername', {
+          const response = await axios.post('/user/getBaseUserInfo', {
             username: this.searchQueryUsername
           }, {
             headers: {
@@ -157,6 +160,11 @@ export default {
           this.listLoading = false
         }
       }
+    },
+    highlightText(text, query) {
+      if (!query) return text
+      const regex = new RegExp(`(${query})`, 'gi')
+      return text.replace(regex, '<b>$1</b>')
     }
   }
 }
