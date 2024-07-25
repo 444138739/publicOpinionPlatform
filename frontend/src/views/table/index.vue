@@ -10,6 +10,7 @@
       />
       <el-button type="primary" @click="handleSearch('username')" class="search-button">Search</el-button>
     </div>
+    <!-- 数据源为filteredItems -->
     <el-table
       v-loading="listLoading"
       :data="filteredItems"
@@ -25,22 +26,22 @@
       </el-table-column>
       <el-table-column label="用户ID">
         <template slot-scope="scope">
-          {{ scope.row.userid }}
+          {{ scope.row.userId }}
         </template>
       </el-table-column>
       <el-table-column label="关注数" width="110" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.following_count }}</span>
+          <span>{{ scope.row.followingCount }}</span>
         </template>
       </el-table-column>
       <el-table-column label="被关注数" width="110" align="center">
         <template slot-scope="scope">
-          {{ scope.row.followed_count }}
+          {{ scope.row.followedCount }}
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="贴文数" width="110" align="center">
         <template slot-scope="scope">
-          {{ scope.row.post_count }}
+          {{ scope.row.postCount }}
         </template>
       </el-table-column>
       <el-table-column align="center" prop="created_at" label="地点" width="200">
@@ -66,18 +67,18 @@ export default {
       defaultData: [
         {
           username: 'John Doe',
-          userid: '12345',
-          following_count: 15,
-          followed_count: 22,
-          post_count: 11,
+          userId: '12345',
+          followingCount: 15,
+          followedCount: 22,
+          postCount: 11,
           location: 'New York'
         },
         {
           username: 'Jane Smith',
-          userid: '67890',
-          following_count: 20,
-          followed_count: 30,
-          post_count: 8,
+          userId: '67890',
+          followingCount: 20,
+          followedCount: 30,
+          postCount: 8,
           location: 'Los Angeles'
         }
       ],
@@ -89,7 +90,7 @@ export default {
     this.fetchData()
   },
   computed: {
-    filteredItems() {
+    filteredItems() {  //  filteredItems 计算属性会遍历 this.list 数组，并对每个元素进行映射。映射后的每个元素都会包含原始数据（通过 ...item 展开操作符）以及一个经过 highlightText 方法处理后的 username 字段。
       return this.list.map(item => ({
         ...item,
         username: this.highlightText(item.username, this.highlightedUsername)
@@ -106,7 +107,7 @@ export default {
 
       this.listLoading = true
       try {
-        const response = await axios.get('/user/getAllBaseUserInfo', {
+        const response = await axios.get('http://localhost:8080/user/getAllBaseUserInfo', {
           headers: {
             'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
           }
@@ -145,7 +146,7 @@ export default {
 
         try {
           // 使用实际的 POST 请求向后端发送 JSON 数据
-          const response = await axios.post('/user/getBaseUserInfo', {
+          const response = await axios.post('http://localhost:8080/user/getBaseUserInfo', {
             username: this.searchQueryUsername
           }, {
             headers: {
@@ -179,7 +180,7 @@ export default {
     highlightText(text, query) {
       if (!query) return text
       const regex = new RegExp(`(${query})`, 'gi')
-      return text.replace(regex, '<b>$1</b>')
+      return text.replace(regex, '<span style="background-color: #D3E3FD; font-weight: bold; color: red; padding: 4px 4px;">$1</span>')
     }
   }
 }
