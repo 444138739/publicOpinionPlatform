@@ -25,17 +25,17 @@
       </el-table-column>
       <el-table-column label="用户ID" width="110" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.user_id }}</span>
+          <span>{{ scope.row.userId }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="post_id" width="110" align="center">
+      <el-table-column label="postId" width="110" align="center">
         <template slot-scope="scope">
-          {{ scope.row.post_id }}
+          {{ scope.row.postId }}
         </template>
       </el-table-column>
       <el-table-column label="文本内容">
         <template slot-scope="scope">
-          {{ scope.row.Hit_sentence }}
+          {{ scope.row.hitSentence }}
         </template>
       </el-table-column>
     </el-table>
@@ -56,15 +56,15 @@ export default {
       defaultData: [ // 假数据
         {
           username: 'John Doe',
-          user_id: '12345',
-          post_id: '1',
-          Hit_sentence: '文本内容'
+          userId: '12345',
+          postId: '1',
+          hitSentence: '文本内容'
         },
         {
           username: 'Jane Smith',
-          user_id: '23456',
-          post_id: '2',
-          Hit_sentence: '文本内容'
+          userId: '23456',
+          postId: '2',
+          hitSentence: '文本内容'
         }
       ],
       cachedData: null,
@@ -92,7 +92,7 @@ export default {
 
       this.listLoading = true
       try {
-        const response = await axios.get('/user/getAllPostInfo', {
+        const response = await axios.get('http://localhost:8080/user/getAllPostInfo', {
           headers: {
             'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
           }
@@ -131,7 +131,7 @@ export default {
 
         try {
           // 使用实际的 POST 请求向后端发送 JSON 数据
-          const response = await axios.post('/post/getPostInfo', {
+          const response = await axios.post('http://localhost:8080/post/getPostInfo', {
             username: this.searchQueryUsername
           }, {
             headers: {
@@ -164,7 +164,7 @@ export default {
     highlightText(text, query) {
       if (!query) return text
       const regex = new RegExp(`(${query})`, 'gi')
-      return text.replace(regex, '<b>$1</b>')
+      return text.replace(regex, '<span style="background-color: #D3E3FD; font-weight: bold; color: red; padding: 4px 4px;">$1</span>')
     }
   }
 }
